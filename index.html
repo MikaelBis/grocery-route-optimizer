@@ -426,11 +426,14 @@ function renderList() {
   prog.innerHTML = progressHTML();
   const bycat = {};
   arr.forEach(item => { if (!bycat[item.cat]) bycat[item.cat]=[]; bycat[item.cat].push(item); });
-  el.innerHTML = CATEGORIES
-    .filter(c => bycat[c.name])
-    .map(c => `<div class="cat-group">
-      <div class="cat-label">${esc(c.name)}</div>
-      ${bycat[c.name].map(item => itemCardHTML(item, false)).join('')}
+  const catNames = new Set(CATEGORIES.map(c => c.name));
+  const extraCats = [...new Set(arr.map(i => i.cat).filter(c => !catNames.has(c)))];
+  const allCats = [...CATEGORIES.map(c => c.name), ...extraCats];
+  el.innerHTML = allCats
+    .filter(name => bycat[name])
+    .map(name => `<div class="cat-group">
+      <div class="cat-label">${esc(name)}</div>
+      ${bycat[name].map(item => itemCardHTML(item, false)).join('')}
     </div>`).join('') + actionButtons();
 }
 
@@ -442,14 +445,17 @@ function renderRoute() {
   prog.innerHTML = progressHTML();
   const bycat = {};
   arr.forEach(item => { if (!bycat[item.cat]) bycat[item.cat]=[]; bycat[item.cat].push(item); });
+  const catNames2 = new Set(CATEGORIES.map(c => c.name));
+  const extraCats2 = [...new Set(arr.map(i => i.cat).filter(c => !catNames2.has(c)))];
+  const allCats2 = [...CATEGORIES.map(c => c.name), ...extraCats2];
   let step = 1;
-  el.innerHTML = CATEGORIES
-    .filter(c => bycat[c.name])
-    .map(c => `<div class="route-step">
+  el.innerHTML = allCats2
+    .filter(name => bycat[name])
+    .map(name => `<div class="route-step">
       <div class="step-num">${step++}</div>
       <div style="flex:1">
-        <div class="step-zone">${esc(c.name)}</div>
-        <div class="step-items">${bycat[c.name].map(i =>
+        <div class="step-zone">${esc(name)}</div>
+        <div class="step-items">${bycat[name].map(i =>
           `<span class="step-item${i.checked?' done':''}" onclick="toggleCheck('${i.id}')">${esc(i.name)}</span>`
         ).join('')}</div>
       </div>
