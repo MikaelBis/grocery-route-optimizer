@@ -84,7 +84,6 @@
   .step-item.done { text-decoration: line-through; opacity: 0.4; }
   .clear-btn { width: 100%; margin-top: 1rem; padding: 12px; font-size: 14px; color: var(--text2); border: 0.5px solid var(--border); border-radius: var(--radius); background: transparent; cursor: pointer; }
   .clear-btn:active { background: var(--bg2); }
-  .clear-all-btn { color: var(--red-text) !important; border-color: rgba(163,45,45,0.3) !important; margin-top: 0; }
   .hint { font-size: 13px; color: var(--text3); text-align: center; padding: 0.75rem 0 0; }
   .loading-screen { position: fixed; inset: 0; background: var(--bg3); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; z-index: 100; }
   .loading-screen p { font-size: 15px; color: var(--text2); }
@@ -296,15 +295,6 @@ async function clearChecked() {
   }
 }
 
-async function clearAll() {
-  if (!Object.keys(items).length) return;
-  if (!confirm('Remove all items from the list?')) return;
-  syncDot.className = 'sync-dot syncing';
-  for (const id of Object.keys(items)) {
-    await remove(ref(db, 'items/' + id));
-  }
-}
-
 async function optimizeRoute() {
   const sorted = Object.values(items).sort((a,b) => getZoneIndex(a.cat) - getZoneIndex(b.cat));
   syncDot.className = 'sync-dot syncing';
@@ -396,10 +386,7 @@ function renderRoute() {
 }
 
 function actionButtons() {
-  return `<div style="display:flex;gap:8px;margin-top:1rem;">
-    <button class="clear-btn" style="flex:1" onclick="clearChecked()">Clear checked</button>
-    <button class="clear-btn clear-all-btn" style="flex:1" onclick="clearAll()">Clear all</button>
-  </div>`;
+  return `<button class="clear-btn" onclick="clearChecked()">Clear checked items</button>`;
 }
 
 function switchTab(tab, btn) {
@@ -413,7 +400,6 @@ window.addItem = addItem;
 window.deleteItem = deleteItem;
 window.toggleCheck = toggleCheck;
 window.clearChecked = clearChecked;
-window.clearAll = clearAll;
 window.optimizeRoute = optimizeRoute;
 window.switchTab = switchTab;
 </script>
