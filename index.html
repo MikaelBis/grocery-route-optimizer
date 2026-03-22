@@ -83,6 +83,8 @@
   .step-item { font-size: 13px; padding: 3px 10px; border-radius: 99px; background: var(--bg2); color: var(--text); border: 0.5px solid var(--border); cursor: pointer; white-space: nowrap; }
   .step-item.done { text-decoration: line-through; opacity: 0.4; }
   .clear-btn { width: 100%; margin-top: 1rem; padding: 12px; font-size: 14px; color: var(--text2); border: 0.5px solid var(--border); border-radius: var(--radius); background: transparent; cursor: pointer; }
+  .clear-btn:active { background: var(--bg2); }
+  .clear-all-btn { color: var(--red-text) !important; border-color: rgba(163,45,45,0.3) !important; margin-top: 0; }
   .hint { font-size: 13px; color: var(--text3); text-align: center; padding: 0.75rem 0 0; }
   .loading-screen { position: fixed; inset: 0; background: var(--bg3); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; z-index: 100; }
   .loading-screen p { font-size: 15px; color: var(--text2); }
@@ -270,7 +272,6 @@ async function addItem() {
   const id = 'item_' + Date.now();
   syncDot.className = 'sync-dot syncing';
   await set(ref(db, 'items/' + id), { id, name, cat: rule.cat, color: rule.color, checked: false, order: Date.now() });
-  optimized = false;
   input.focus();
 }
 
@@ -288,9 +289,19 @@ async function toggleCheck(id) {
 }
 
 async function clearChecked() {
+  if (!Object.values(items).some(i => i.checked)) return;
   syncDot.className = 'sync-dot syncing';
   for (const [id, item] of Object.entries(items)) {
     if (item.checked) await remove(ref(db, 'items/' + id));
+  }
+}
+
+async function clearAll() {
+  if (!Object.keys(items).length) return;
+  if (!confirm('Remove all items from the list?')) return;
+  syncDot.className = 'sync-dot syncing';
+  for (const id of Object.keys(items)) {
+    await remove(ref(db, 'items/' + id));
   }
 }
 
@@ -335,7 +346,7 @@ function renderAdd() {
       <span class="item-name">${esc(item.name)}</span>
       <span class="badge" style="${badgeStyle(item.color)}">${esc(item.cat)}</span>
       <button class="del-btn" onclick="deleteItem('${item.id}')">×</button>
-    </div>`).join('');
+    </div>`).join('') + actionButtons();
 }
 
 function renderList() {
@@ -355,7 +366,7 @@ function renderList() {
           <span class="item-name">${esc(item.name)}</span>
           <button class="del-btn" onclick="deleteItem('${item.id}')">×</button>
         </div>`).join('')}
-    </div>`).join('') + `<button class="clear-btn" onclick="clearChecked()">Clear checked items</button>`;
+    </div>`).join('') + actionButtons();
 }
 
 function renderRoute() {
@@ -381,7 +392,14 @@ function renderRoute() {
           `<span class="step-item${i.checked?' done':''}" onclick="toggleCheck('${i.id}')">${esc(i.name)}</span>`
         ).join('')}</div>
       </div>
-    </div>`).join('');
+    </div>`).join('') + actionButtons();
+}
+
+function actionButtons() {
+  return `<div style="display:flex;gap:8px;margin-top:1rem;">
+    <button class="clear-btn" style="flex:1" onclick="clearChecked()">Clear checked</button>
+    <button class="clear-btn clear-all-btn" style="flex:1" onclick="clearAll()">Clear all</button>
+  </div>`;
 }
 
 function switchTab(tab, btn) {
@@ -395,6 +413,7 @@ window.addItem = addItem;
 window.deleteItem = deleteItem;
 window.toggleCheck = toggleCheck;
 window.clearChecked = clearChecked;
+window.clearAll = clearAll;
 window.optimizeRoute = optimizeRoute;
 window.switchTab = switchTab;
 </script>
