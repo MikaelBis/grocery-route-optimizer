@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Shopping List</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeede9;
+    --text: #1a1a1a;
+    --text2: #666660;
+    --text3: #999990;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --green-bg: #eaf3de; --green-text: #3b6d11;
+    --blue-bg: #e6f1fb; --blue-text: #185fa5;
+    --red-bg: #fcebeb; --red-text: #a32d2d;
+    --amber-bg: #faeeda; --amber-text: #854f0b;
+    --purple-bg: #eeedfe; --purple-text: #534ab7;
+    --teal-bg: #e1f5ee; --teal-text: #0f6e56;
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+      --text: #f0f0ec; --text2: #a0a09a; --text3: #66665f;
+      --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.20);
+      --green-bg: #173404; --green-text: #c0dd97;
+      --blue-bg: #042c53; --blue-text: #b5d4f4;
+      --red-bg: #501313; --red-text: #f7c1c1;
+      --amber-bg: #412402; --amber-text: #fac775;
+      --purple-bg: #26215c; --purple-text: #cecbf6;
+      --teal-bg: #04342c; --teal-text: #9fe1cb;
+    }
+  }
+
+  html, body { height: 100%; background: var(--bg3); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text); }
+
+  .app { max-width: 480px; margin: 0 auto; min-height: 100%; background: var(--bg3); display: flex; flex-direction: column; }
+
+  .header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 1rem 1rem 0; }
+  .header h1 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .header p { font-size: 13px; color: var(--text2); margin-bottom: 0.75rem; }
+
+  .tabs { display: flex; gap: 0; }
+  .tab { flex: 1; padding: 10px 4px; font-size: 14px; font-weight: 400; text-align: center; border: none; background: transparent; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .tab.active { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--text); }
+
+  .content { flex: 1; padding: 1rem; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .add-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .add-row input {
+    flex: 1; padding: 11px 14px; font-size: 16px;
+    border: 0.5px solid var(--border2); border-radius: var(--radius);
+    background: var(--bg); color: var(--text); outline: none;
+    -webkit-appearance: none;
+  }
+  .add-row input:focus { border-color: var(--text); }
+  .add-row input::placeholder { color: var(--text3); }
+  .btn-primary {
+    padding: 11px 18px; font-size: 15px; font-weight: 600;
+    border: none; border-radius: var(--radius);
+    background: var(--text); color: var(--bg);
+    cursor: pointer; white-space: nowrap; -webkit-appearance: none;
+  }
+  .btn-primary:active { opacity: 0.8; transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.4; pointer-events: none; }
+
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text2); font-size: 15px; line-height: 1.6; }
+
+  .item-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; background: var(--bg);
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 7px; transition: opacity 0.2s;
+  }
+  .item-card.checked { opacity: 0.4; }
+  .item-card.checked .item-name { text-decoration: line-through; }
+
+  .check-btn {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 1.5px solid var(--border2); background: transparent;
+    cursor: pointer; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; transition: all 0.15s;
+    -webkit-appearance: none;
+  }
+  .check-btn.done { background: var(--green-bg); border-color: var(--green-text); }
+  .check-btn.done::after {
+    content: ''; display: block; width: 6px; height: 10px;
+    border: 2px solid var(--green-text); border-top: none; border-left: none;
+    transform: rotate(45deg) translateY(-1px);
+  }
+
+  .item-name { flex: 1; font-size: 15px; color: var(--text); }
+  .badge {
+    font-size: 11px; font-weight: 500; padding: 3px 9px;
+    border-radius: 99px; flex-shrink: 0; white-space: nowrap;
+  }
+  .del-btn {
+    width: 28px; height: 28px; border: none; background: transparent;
+    color: var(--text3); cursor: pointer; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; flex-shrink: 0; -webkit-appearance: none;
+    line-height: 1;
+  }
+  .del-btn:active { background: var(--red-bg); color: var(--red-text); }
+
+  .cat-group { margin-bottom: 1.25rem; }
+  .cat-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text2);
+    margin-bottom: 6px; padding: 0 2px;
+  }
+
+  .progress-wrap { margin-bottom: 1rem; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+  .progress-track { height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--green-text); border-radius: 3px; transition: width 0.3s; }
+
+  .route-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .route-header h2 { font-size: 17px; font-weight: 600; }
+  .btn-optimize {
+    padding: 9px 16px; font-size: 14px; font-weight: 600;
+    border: none; border-radius: var(--radius-sm);
+    background: var(--blue-bg); color: var(--blue-text); cursor: pointer;
+    -webkit-appearance: none;
+  }
+  .btn-optimize:active { opacity: 0.8; transform: scale(0.97); }
+
+  .route-step { display: flex; gap: 14px; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+  .route-step:last-child { border-bottom: none; }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--bg2); border: 0.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: var(--text2); flex-shrink: 0; margin-top: 1px;
+  }
+  .step-zone { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .step-items { display: flex; flex-wrap: wrap; gap: 6px; }
+  .step-item {
+    font-size: 13px; padding: 3px 10px; border-radius: 99px;
+    background: var(--bg2); color: var(--text);
+    border: 0.5px solid var(--border); cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .step-item.done { text-decoration: line-through; opacity: 0.4; }
+
+  .clear-btn {
+    width: 100%; margin-top: 1rem; padding: 12px;
+    font-size: 14px; color: var(--text2);
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    background: transparent; cursor: pointer; -webkit-appearance: none;
+  }
+  .clear-btn:active { background: var(--bg2); }
+
+  .hint { font-size: 13px; color: var(--text3); text-align: center; padding: 0.75rem 0 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Shopping list</h1>
+    <p>Add items, check categories, optimize your route</p>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('add',this)">Add</button>
+      <button class="tab" onclick="switchTab('list',this)">List</button>
+      <button class="tab" onclick="switchTab('route',this)">Route</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="view-add" class="view active">
+      <div class="add-row">
+        <input id="item-input" type="text" placeholder="e.g. bananas, milk..." autocomplete="off" />
+        <button class="btn-primary" id="add-btn" onclick="addItem()">Add</button>
+      </div>
+      <div id="add-list"></div>
+      <p class="hint">Items added here appear instantly for everyone</p>
+    </div>
+
+    <div id="view-list" class="view">
+      <div id="list-progress"></div>
+      <div id="list-container"></div>
+    </div>
+
+    <div id="view-route" class="view">
+      <div class="route-header">
+        <h2>Store route</h2>
+        <button class="btn-optimize" onclick="optimizeRoute()">Optimize</button>
+      </div>
+      <div id="route-progress"></div>
+      <div id="route-container"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ZONES = [
+  { name: 'Entrance & bakery',     cats: ['bakery','bread'] },
+  { name: 'Fruits & vegetables',   cats: ['fruits','vegetables'] },
+  { name: 'Deli & refrigerated',   cats: ['deli','refrigerated','ready meals'] },
+  { name: 'Dairy & eggs',          cats: ['dairy','eggs'] },
+  { name: 'Meat & fish',           cats: ['meat','fish','seafood'] },
+  { name: 'Dry food & pantry',     cats: ['dry food','pasta','rice','canned','condiments','snacks','beverages','coffee','tea','spices','cereal'] },
+  { name: 'Frozen',                cats: ['frozen'] },
+  { name: 'Household & hygiene',   cats: ['household','hygiene','cleaning','personal care'] },
+];
+
+const CAT_RULES = [
+  { cat: 'fruits',        color: 'green',  words: ['banana','apple','orange','grape','berry','berries','strawberry','mango','pear','melon','kiwi','lemon','lime','peach','plum','pineapple','fruit','avocado','tomato','tomatoes'] },
+  { cat: 'vegetables',    color: 'green',  words: ['carrot','potato','onion','garlic','broccoli','spinach','lettuce','cucumber','pepper','zucchini','cabbage','celery','mushroom','mushrooms','pea','peas','corn','salad','vegetable','leek','beetroot'] },
+  { cat: 'dairy',         color: 'blue',   words: ['milk','cream','yogurt','yoghurt','butter','cheese','quark','sour cream','creme fraiche','oat milk','almond milk','kefir'] },
+  { cat: 'eggs',          color: 'amber',  words: ['egg','eggs'] },
+  { cat: 'meat',          color: 'red',    words: ['chicken','beef','pork','lamb','turkey','sausage','bacon','ham','minced','mince','steak','chop','fillet','meat','salami','chorizo','hotdog'] },
+  { cat: 'fish',          color: 'teal',   words: ['salmon','tuna','cod','shrimp','prawn','herring','mackerel','fish','seafood','crab','lobster','mussel','anchovy'] },
+  { cat: 'frozen',        color: 'blue',   words: ['frozen','ice cream','ice-cream','icecream'] },
+  { cat: 'bakery',        color: 'amber',  words: ['bread','loaf','bun','roll','croissant','muffin','cake','pastry','bagel','pita','tortilla','wrap','cracker'] },
+  { cat: 'pasta',         color: 'purple', words: ['pasta','spaghetti','penne','macaroni','noodle','lasagne','lasagna','fettuccine','rigatoni'] },
+  { cat: 'rice',          color: 'purple', words: ['rice','quinoa','couscous','bulgur','oats','oatmeal','porridge','millet'] },
+  { cat: 'canned',        color: 'purple', words: ['can','canned','tin','tinned','beans','lentils','chickpeas','soup','tomato paste','tomato sauce','coconut milk'] },
+  { cat: 'condiments',    color: 'amber',  words: ['ketchup','mustard','mayo','mayonnaise','vinegar','soy sauce','oil','olive oil','salt','pepper','sugar','honey','jam','sauce','dressing','syrup','tahini','hummus'] },
+  { cat: 'snacks',        color: 'amber',  words: ['chips','crisps','chocolate','candy','sweets','nuts','peanut','almond','cashew','popcorn','biscuit','cookie','snack','granola','bar','raisin'] },
+  { cat: 'beverages',     color: 'teal',   words: ['juice','soda','water','beer','wine','cider','drink','lemonade','sparkling','cola','energy drink','kombucha'] },
+  { cat: 'coffee',        color: 'amber',  words: ['coffee','espresso','cappuccino','latte','tea','herbal tea','green tea','matcha','cocoa','hot chocolate'] },
+  { cat: 'spices',        color: 'red',    words: ['spice','herb','cinnamon','cumin','paprika','turmeric','oregano','basil','thyme','rosemary','dill','curry','chili','ginger','vanilla','nutmeg','flour','yeast','baking'] },
+  { cat: 'deli',          color: 'red',    words: ['deli','cold cuts','smoked','prosciutto','pastrami','pepperoni','cooked'] },
+  { cat: 'household',     color: 'purple', words: ['toilet','paper towel','kitchen roll','bag','trash bag','foil','cling film','sponge','cloth','detergent','dishwasher','laundry','washing'] },
+  { cat: 'hygiene',       color: 'teal',   words: ['shampoo','conditioner','soap','deodorant','toothpaste','toothbrush','razor','lotion','cream','face','hair','body wash','cotton'] },
+  { cat: 'dry food',      color: 'purple', words: [] },
+];
+
+const BADGE_COLORS = {
+  green:  { bg: '#eaf3de', text: '#3b6d11' },
+  blue:   { bg: '#e6f1fb', text: '#185fa5' },
+  red:    { bg: '#fcebeb', text: '#a32d2d' },
+  amber:  { bg: '#faeeda', text: '#854f0b' },
+  purple: { bg: '#eeedfe', text: '#534ab7' },
+  teal:   { bg: '#e1f5ee', text: '#0f6e56' },
+};
+
+function categorize(name) {
+  const n = name.toLowerCase();
+  for (const rule of CAT_RULES) {
+    if (rule.words.some(w => n.includes(w))) return rule;
+  }
+  return CAT_RULES[CAT_RULES.length - 1];
+}
+
+function getZoneIndex(cat) {
+  const c = (cat || '').toLowerCase();
+  for (let i = 0; i < ZONES.length; i++) {
+    if (ZONES[i].cats.some(z => c === z || c.includes(z) || z.includes(c))) return i;
+  }
+  return ZONES.length - 2;
+}
+
+let items = [];
+let optimized = false;
+const STORAGE_KEY = 'shopping_list_v1';
+
+function load() {
+  try { items = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { items = []; }
+  renderAll();
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(e) {}
+}
+
+function addItem() {
+  const input = document.getElementById('item-input');
+  const name = input.value.trim();
+  if (!name) return;
+  input.value = '';
+  const rule = categorize(name);
+  items.push({ id: Date.now(), name, cat: rule.cat, color: rule.color, checked: false });
+  optimized = false;
+  save();
+  renderAll();
+  input.focus();
+}
+
+document.getElementById('item-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addItem();
+});
+
+function deleteItem(id) {
+  items = items.filter(i => i.id !== id);
+  save(); renderAll();
+}
+
+function toggleCheck(id) {
+  const item = items.find(i => i.id === id);
+  if (item) { item.checked = !item.checked; save(); renderAll(); }
+}
+
+function clearChecked() {
+  items = items.filter(i => !i.checked);
+  save(); renderAll();
+}
+
+function optimizeRoute() {
+  items.sort((a, b) => getZoneIndex(a.cat) - getZoneIndex(b.cat));
+  optimized = true;
+  save(); renderAll();
+}
+
+function badgeStyle(color) {
+  const c = BADGE_COLORS[color] || BADGE_COLORS.purple;
+  return `background:${c.bg};color:${c.text}`;
+}
+
+function progressHTML(id) {
+  const total = items.length;
+  const done = items.filter(i => i.checked).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  return `<div class="progress-wrap">
+    <div class="progress-info"><span>${done} of ${total} items</span><span>${pct}%</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function renderAll() {
+  renderAdd(); renderList(); renderRoute();
+}
+
+function renderAdd() {
+  const el = document.getElementById('add-list');
+  if (!items.length) { el.innerHTML = '<div class="empty">No items yet — add your first one above</div>'; return; }
+  el.innerHTML = items.slice().reverse().map(item =>
+    `<div class="item-card${item.checked?' checked':''}">
+      <button class="check-btn${item.checked?' done':''}" onclick="toggleCheck(${item.id})"></button>
+      <span class="item-name">${escHtml(item.name)}</span>
+      <span class="badge" style="${badgeStyle(item.color)}">${escHtml(item.cat)}</span>
+      <button class="del-btn" onclick="deleteItem(${item.id})">×</button>
+    </div>`
+  ).join('');
+}
+
+function renderList() {
+  const prog = document.getElementById('list-progress');
+  const el = document.getElementById('list-container');
+  if (!items.length) { prog.innerHTML=''; el.innerHTML = '<div class="empty">Add items in the Add tab</div>'; return; }
+  prog.innerHTML = progressHTML();
+
+  const bycat = {};
+  items.forEach(item => {
+    if (!bycat[item.cat]) bycat[item.cat] = [];
+    bycat[item.cat].push(item);
+  });
+
+  el.innerHTML = Object.entries(bycat).map(([cat, catItems]) =>
+    `<div class="cat-group">
+      <div class="cat-label">${escHtml(cat)}</div>
+      ${catItems.map(item =>
+        `<div class="item-card${item.checked?' checked':''}">
+          <button class="check-btn${item.checked?' done':''}" onclick="toggleCheck(${item.id})"></button>
+          <span class="item-name">${escHtml(item.name)}</span>
+          <button class="del-btn" onclick="deleteItem(${item.id})">×</button>
+        </div>`
+      ).join('')}
+    </div>`
+  ).join('') + `<button class="clear-btn" onclick="clearChecked()">Clear checked items</button>`;
+}
+
+function renderRoute() {
+  const prog = document.getElementById('route-progress');
+  const el = document.getElementById('route-container');
+  if (!items.length) { prog.innerHTML=''; el.innerHTML = '<div class="empty">Add items first, then tap Optimize</div>'; return; }
+  prog.innerHTML = progressHTML();
+  if (!optimized) { el.innerHTML = '<div class="empty" style="padding:1.5rem 0">Tap "Optimize" to sort items by store zone</div>'; return; }
+
+  const byZone = {};
+  items.forEach(item => {
+    const zi = getZoneIndex(item.cat);
+    const zname = ZONES[zi] ? ZONES[zi].name : 'Other';
+    if (!byZone[zname]) byZone[zname] = [];
+    byZone[zname].push(item);
+  });
+
+  let step = 1;
+  el.innerHTML = ZONES
+    .filter(z => byZone[z.name])
+    .map(z => {
+      const zItems = byZone[z.name];
+      return `<div class="route-step">
+        <div class="step-num">${step++}</div>
+        <div style="flex:1">
+          <div class="step-zone">${escHtml(z.name)}</div>
+          <div class="step-items">${zItems.map(i =>
+            `<span class="step-item${i.checked?' done':''}" onclick="toggleCheck(${i.id})">${escHtml(i.name)}</span>`
+          ).join('')}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('view-' + tab).classList.add('active');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+load();
+</script>
+</body>
+</html>
