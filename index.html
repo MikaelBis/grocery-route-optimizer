@@ -432,6 +432,8 @@ async function renameCategory(idx) {
   CATEGORIES[idx].name = trimmed;
   await saveCats();
 }
+
+async function deleteCategory(idx) {
   const cat = CATEGORIES[idx];
   if (cat.name === 'Övrigt') { alert("Can't delete Övrigt"); return; }
   if (!confirm(`Delete category "${cat.name}"? Items in this category will move to Övrigt.`)) return;
