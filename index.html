@@ -410,9 +410,27 @@ async function addCategory() {
   CATEGORIES.splice(CATEGORIES.length - 1, 0, { name, words:[] }); // insert before Övrigt
   await saveCats();
 }
-async function deleteCategory(idx) {
+async function renameCategory(idx) {
+  const cat = CATEGORIES[idx];
+  const newName = prompt(`Rename "${cat.name}" to:`, cat.name);
+  if (!newName || newName.trim() === cat.name) return;
+  const trimmed = newName.trim();
+  if (CATEGORIES.find((c, i) => i !== idx && c.name === trimmed)) { alert('A category with that name already exists.'); return; }
+  const oldName = cat.name;
+  // Update all items in this category
+  for (const [id, item] of Object.entries(items)) {
+    if (item.cat === oldName) await update(ref(db,'items/'+id), { cat: trimmed });
+  }
+  // Update dictionary entries
+  for (const [key, val] of Object.entries(dictionary)) {
+    if (val === oldName) await set(ref(db,'dictionary/'+key), trimmed);
+  }
+  CATEGORIES[idx].name = trimmed;
+  await saveCats();
+}
   const cat = CATEGORIES[idx];
   if (cat.name === 'Övrigt') { alert("Can't delete Övrigt"); return; }
+  if (!confirm(`Delete category "${cat.name}"? Items in this category will move to Övrigt.`)) return;
   // Move items in this category to Övrigt
   for (const [id, item] of Object.entries(items)) {
     if (item.cat === cat.name) await update(ref(db,'items/'+id), { cat:'Övrigt' });
@@ -596,6 +614,7 @@ function renderSettings() {
       <span class="drag-handle">⠿</span>
       <span class="cat-row-name">${esc(cat.name)}</span>
       <span class="cat-row-count">${totalCount} saved</span>
+      <button class="cat-row-expand" onclick="renameCategory(${idx})" title="Rename" style="font-size:14px">✎</button>
       <button class="cat-row-expand" onclick="toggleExpandCat('${esc(cat.name)}')">${isExpanded?'▲':'▼'}</button>
       ${cat.name!=='Övrigt'?`<button class="del-btn" onclick="deleteCategory(${idx})" title="Delete category">×</button>`:''}
     </div>
@@ -635,7 +654,7 @@ window.onDragStart=onDragStart; window.onDragEnd=onDragEnd; window.onDragOver=on
 window.onTouchStart=onTouchStart; window.onTouchEnd=onTouchEnd;
 window.onCatDragStart=onCatDragStart; window.onCatDragEnd=onCatDragEnd;
 window.onCatDragOver=onCatDragOver; window.onCatDrop=onCatDrop;
-window.addCategory=addCategory; window.deleteCategory=deleteCategory;
+window.addCategory=addCategory; window.deleteCategory=deleteCategory; window.renameCategory=renameCategory;
 window.toggleExpandCat=toggleExpandCat; window.deleteDictItem=deleteDictItem; window.moveDictItem=moveDictItem;
 window.doLogin=doLogin; window.doLogout=doLogout;
 </script>
