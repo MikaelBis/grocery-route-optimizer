@@ -207,6 +207,14 @@ const dictRef  = ref(db, 'dictionary');
 // Auth state
 let dbUnsubscribe = null;
 
+// Safety timeout — if auth hasn't resolved in 5s, show login
+setTimeout(() => {
+  if (document.getElementById('loading').style.display !== 'none') {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('login-screen').classList.add('visible');
+  }
+}, 5000);
+
 onAuthStateChanged(auth, user => {
   document.getElementById('loading').style.display = 'none';
   if (user) {
