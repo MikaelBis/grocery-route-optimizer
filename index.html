@@ -125,15 +125,17 @@
   <div class="login-card">
     <h2>Shopping list</h2>
     <p>Sign in to access your list</p>
-    <div class="login-field">
-      <label>Email</label>
-      <input id="login-email" type="email" placeholder="your@email.com" autocomplete="email" />
-    </div>
-    <div class="login-field">
-      <label>Password</label>
-      <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
-    </div>
-    <button class="btn-login" id="login-btn" onclick="doLogin()">Sign in</button>
+    <form onsubmit="doLogin();return false;">
+      <div class="login-field">
+        <label>Email</label>
+        <input id="login-email" type="email" placeholder="your@email.com" autocomplete="email" />
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-login" id="login-btn" type="submit">Sign in</button>
+    </form>
     <div class="login-error" id="login-error"></div>
   </div>
 </div>
@@ -249,9 +251,7 @@ async function doLogout() {
   await signOut(auth);
 }
 
-// Enter key on password field triggers login
-document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-password').focus(); });
+// doLogin and doLogout are exposed via window below
 
 const CATEGORIES = [
   { name: 'Hem',             words: ['lakan','synål','dynvar','blommor','blomma','kudde','kuddfodral','påslakan'] },
