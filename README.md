@@ -1,6 +1,8 @@
-# 🛒 Shopping List — Smart Grocery Route Optimizer
+# 🛒 Grocery Route Optimizer — Smart Shopping List
 
 A free, real-time shared shopping list that sorts your items in the exact order of your supermarket's layout — so you never backtrack through the store again.
+
+**Live app → [mikaelbis.github.io/grocery-route-optimizer](https://mikaelbis.github.io/grocery-route-optimizer)**
 
 ---
 
