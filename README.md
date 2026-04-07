@@ -90,8 +90,6 @@ No frameworks, no dependencies, no monthly fees. The entire app is one HTML file
 
 Contributions are welcome! If you'd like to add support for more languages, improve categorization, or build new features — open an issue or submit a pull request.
 
-If you map out the layout of a supermarket chain and want to share it, open an issue with the store name, country, and category order — we'd love to include it.
-
 ---
 
 ## License
