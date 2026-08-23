@@ -512,7 +512,20 @@ function startListening() {
     renderAll();
   });
   onValue(ref(db,base+'/items'), snap=>{
-    items=snap.val()||{};
+    const raw=snap.val()||{};
+    items={};
+    // Always trust the Firebase key as the id, and repair missing fields
+    // so a malformed entry can never become undeletable.
+    for(const[key,val]of Object.entries(raw)){
+      if(!val||typeof val!=='object'){ items[key]={id:key,name:'(unknown item)',cat:'Övrigt',checked:false,order:999999}; continue; }
+      items[key]={
+        id:key,
+        name:(typeof val.name==='string'&&val.name.trim())?val.name:'(unknown item)',
+        cat:(typeof val.cat==='string'&&val.cat.trim())?val.cat:'Övrigt',
+        checked:val.checked===true,
+        order:typeof val.order==='number'?val.order:999999
+      };
+    }
     syncDot.className='sync-dot online';
     renderAll();
   });
